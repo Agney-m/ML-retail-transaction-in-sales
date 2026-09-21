@@ -57,3 +57,34 @@ print(df_raw["Return_Flag"].value_counts())
 print(df_raw["Return_Flag"].value_counts(normalize=True).round(3))
 # Compact numerical audit
 df_raw.describe(include="all").T
+df_eda = df_raw.copy()
+
+df_eda["Order_Date"] = pd.to_datetime(df_eda["Order_Date"], errors="coerce")
+df_eda["Order_Time"] = pd.to_datetime(df_eda["Order_Time"], format="%H:%M:%S", errors="coerce")
+
+print("EDA copy created.")
+numeric_cols_eda = df_eda.select_dtypes(include=np.number).columns.tolist()
+categorical_cols_eda = df_eda.select_dtypes(exclude=np.number).columns.tolist()
+
+print(f"Numerical features: {len(numeric_cols_eda)}")
+print(f"Categorical/date-time features: {len(categorical_cols_eda)}")
+
+for col in numeric_cols_eda:
+    plt.figure(figsize=(8, 4))
+    sns.histplot(df_eda[col].dropna(), kde=True)
+    plt.title(f"Distribution of {col}")
+    plt.xlabel(col)
+    plt.ylabel("Frequency")
+    plt.tight_layout()
+    plt.show()
+
+for col in categorical_cols_eda:
+    plt.figure(figsize=(9, 5))
+    counts = df_eda[col].astype("string").fillna("Missing").value_counts().head(15)
+    sns.barplot(x=counts.values, y=counts.index)
+    plt.title(f"Distribution of {col} (top 15 categories)")
+    plt.xlabel("Count")
+    plt.ylabel(col)
+    plt.tight_layout()
+    plt.show()
+
