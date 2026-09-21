@@ -88,3 +88,10 @@ for col in categorical_cols_eda:
     plt.tight_layout()
     plt.show()
 
+# Correlation heatmap for numerical variables.
+plt.figure(figsize=(15, 11))
+corr = df_eda.select_dtypes(include=np.number).corr()
+sns.heatmap(corr, cmap="coolwarm", center=0, annot=True)
+plt.title("Correlation Heatmap — Numerical Features")
+plt.tight_layout()
+plt.show()
