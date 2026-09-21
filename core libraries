@@ -456,3 +456,15 @@ res, m = evaluate_regressor(
 )
 results.append(res)
 fitted_models["Decision Tree Regressor"] = m
+res, m = evaluate_regressor(
+    "Random Forest Regressor",
+    RandomForestRegressor(
+        n_estimators=200,
+        max_depth=10,
+        random_state=RANDOM_STATE,
+        n_jobs=-1
+    ),
+    Xr_train_p, yr_train, Xr_test_p, yr_test
+)
+results.append(res)
+fitted_models["Random Forest Regressor"] = m
