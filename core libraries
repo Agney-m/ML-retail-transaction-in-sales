@@ -352,3 +352,23 @@ linear_coef = pd.Series(m.coef_, index=reg_feature_names).sort_values(
 )
 print("Top Linear Regression coefficients by absolute magnitude:")
 display(linear_coef.head(15))
+# 2. Ridge Regression
+res, m = evaluate_regressor(
+    "Ridge Regression",
+    Ridge(alpha=1.0),
+    Xr_train_p, yr_train, Xr_test_p, yr_test
+)
+results.append(res)
+fitted_models["Ridge Regression"] = m
+
+# 3. Lasso Regression
+res, m = evaluate_regressor(
+    "Lasso Regression",
+    Lasso(alpha=0.1, max_iter=10000, random_state=RANDOM_STATE),
+    Xr_train_p, yr_train, Xr_test_p, yr_test
+)
+results.append(res)
+fitted_models["Lasso Regression"] = m
+
+lasso_coef = pd.Series(m.coef_, index=reg_feature_names)
+print("Number of zero Lasso coefficients:", (lasso_coef == 0).sum())
