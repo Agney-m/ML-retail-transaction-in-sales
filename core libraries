@@ -127,3 +127,74 @@ plt.xlabel("Quantity")
 plt.ylabel("Profit")
 plt.tight_layout()
 plt.show()
+
+plt.figure(figsize=(8, 5))
+sns.scatterplot(data=df_eda, x="Discount_Percentage", y="Profit", alpha=0.35)
+plt.title("Discount Percentage vs Profit")
+plt.xlabel("Discount Percentage")
+plt.ylabel("Profit")
+plt.tight_layout()
+plt.show()
+df = df_raw.copy()
+
+# Remove exact duplicate records.
+before = len(df)
+df = df.drop_duplicates().reset_index(drop=True)
+print(f"Dropped {before - len(df)} duplicate rows.")
+
+# Standardise common spelling/capitalisation variants.
+category_maps = {
+    "Customer_Gender": {
+        "male": "Male",
+        "FEMALE": "Female",
+        "Non Binary": "Non-binary"
+    },
+    "Product_Category": {
+        "electronics": "Electronics",
+        "FURNITURE": "Furniture",
+        "Office supplies": "Office Supplies"
+    },
+    "Payment_Method": {
+        "paypal": "PayPal",
+        "credit card": "Credit Card",
+        "DebitCard": "Debit Card",
+        "Bank transfer": "Bank Transfer"
+    },
+    "Order_Status": {
+        "completed": "Completed",
+        "SHIPPED": "Shipped",
+        "processing": "Processing"
+    }
+}
+
+for col, mapping in category_maps.items():
+    df[col] = df[col].replace(mapping)
+
+# Parse date and time.
+df["Order_Date"] = pd.to_datetime(df["Order_Date"], errors="coerce")
+df["Order_Time"] = pd.to_datetime(df["Order_Time"], format="%H:%M:%S", errors="coerce")
+
+# Feature engineering.
+df["Order_Month"] = df["Order_Date"].dt.month
+df["Order_DayOfWeek"] = df["Order_Date"].dt.dayofweek
+df["Order_Quarter"] = df["Order_Date"].dt.quarter
+df["Order_Day"] = df["Order_Date"].dt.day
+df["Order_Hour"] = df["Order_Time"].dt.hour
+df["Is_Weekend"] = (df["Order_DayOfWeek"] >= 5).astype(float)
+
+# Transaction-value features.
+df["Gross_Amount_Before_Discount"] = df["Quantity"] * df["Unit_Price"]
+df["Discount_Amount"] = (
+    df["Gross_Amount_Before_Discount"] * df["Discount_Percentage"] / 100
+)
+
+# Remove raw date/time columns after extracting useful components.
+df = df.drop(columns=["Order_Date", "Order_Time"])
+
+print("Engineered features added:")
+print([
+    "Order_Month", "Order_DayOfWeek", "Order_Quarter", "Order_Day",
+    "Order_Hour", "Is_Weekend",
+    "Gross_Amount_Before_Discount", "Discount_Amount"
+])
+print("\nShape after cleaning/feature engineering:", df.shape)
