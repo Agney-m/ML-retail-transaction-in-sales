@@ -239,3 +239,88 @@ for col in boxplot_cols:
     plt.xlabel(col)
     plt.tight_layout()
     plt.show()
+identifier_and_redundant = [
+    "Transaction_ID", "Order_ID", "Customer_ID",
+    "Customer_Name", "Store_Name", "Product_Name"
+]
+
+df_model = df.drop(columns=identifier_and_redundant).copy()
+
+print("Regression target:", "Profit")
+print("Classification target:", "Return_Flag")
+print("Remaining columns:", len(df_model.columns))
+def fit_iqr_bounds(X_train, columns):
+    bounds = {}
+    for col in columns:
+        q1 = X_train[col].quantile(0.25)
+        q3 = X_train[col].quantile(0.75)
+        iqr = q3 - q1
+        bounds[col] = (q1 - 1.5 * iqr, q3 + 1.5 * iqr)
+    return bounds
+
+def apply_iqr_bounds(X, bounds):
+    X = X.copy()
+    for col, (lower, upper) in bounds.items():
+        X[col] = X[col].clip(lower=lower, upper=upper)
+    return X
+
+continuous_clip_cols = [
+    "Customer_Age", "Quantity", "Unit_Price", "Discount_Percentage",
+    "Delivery_Days", "Customer_Rating", "Inventory_Level",
+    "Gross_Amount_Before_Discount", "Discount_Amount"
+]
+reg_drop = [
+    "Profit",
+    "Sales_Amount", "Cost_Amount",
+    "Return_Flag", "Return_Reason", "Order_Status"
+]
+
+reg_features = [c for c in df_model.columns if c not in reg_drop]
+X_reg = df_model[reg_features].copy()
+y_reg = df_model["Profit"].copy()
+
+reg_bins = pd.qcut(y_reg, q=10, labels=False, duplicates="drop")
+
+Xr_train, Xr_test, yr_train, yr_test, _, _ = train_test_split(
+    X_reg, y_reg, reg_bins,
+    test_size=0.2,
+    random_state=RANDOM_STATE,
+    stratify=reg_bins
+)
+
+reg_iqr_bounds = fit_iqr_bounds(Xr_train, continuous_clip_cols)
+Xr_train = apply_iqr_bounds(Xr_train, reg_iqr_bounds)
+Xr_test = apply_iqr_bounds(Xr_test, reg_iqr_bounds)
+
+reg_numeric_features = Xr_train.select_dtypes(include=np.number).columns.tolist()
+reg_categorical_features = Xr_train.select_dtypes(exclude=np.number).columns.tolist()
+
+reg_preprocessor = ColumnTransformer(
+    transformers=[
+        (
+            "num",
+            Pipeline([
+                ("imputer", SimpleImputer(strategy="median")),
+                ("scaler", StandardScaler())
+            ]),
+            reg_numeric_features
+        ),
+        (
+            "cat",
+            Pipeline([
+                ("imputer", SimpleImputer(strategy="most_frequent")),
+                ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+            ]),
+            reg_categorical_features
+        )
+    ],
+    remainder="drop"
+)
+
+Xr_train_p = reg_preprocessor.fit_transform(Xr_train)
+Xr_test_p = reg_preprocessor.transform(Xr_test)
+
+reg_feature_names = reg_preprocessor.get_feature_names_out()
+
+print("Regression train/test shapes:", Xr_train_p.shape, Xr_test_p.shape)
+print("Number of processed regression features:", len(reg_feature_names))
