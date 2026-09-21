@@ -391,3 +391,61 @@ res, m = evaluate_regressor(
 )
 results.append(res)
 fitted_models["ElasticNet Regression"] = m
+
+# 5. Polynomial Regression
+
+poly_numeric_names = [
+    "num__Customer_Age",
+    "num__Quantity",
+    "num__Unit_Price",
+    "num__Discount_Percentage",
+    "num__Delivery_Days",
+    "num__Customer_Rating",
+    "num__Inventory_Level",
+    "num__Gross_Amount_Before_Discount",
+    "num__Discount_Amount",
+    "num__Order_Month",
+    "num__Order_DayOfWeek",
+    "num__Order_Quarter",
+    "num__Order_Day",
+    "num__Order_Hour",
+    "num__Is_Weekend"
+]
+
+poly_indices = [list(reg_feature_names).index(c) for c in poly_numeric_names if c in reg_feature_names]
+
+Xr_poly_base = Xr_train_p[:, poly_indices]
+Xr_poly_test_base = Xr_test_p[:, poly_indices]
+
+Xr_tr2, Xr_val, yr_tr2, yr_val = train_test_split(
+    Xr_poly_base, yr_train,
+    test_size=0.2,
+    random_state=RANDOM_STATE
+)
+
+poly_scores = {}
+for deg in [1, 2, 3]:
+    poly = PolynomialFeatures(degree=deg, include_bias=False)
+    Xp_tr = poly.fit_transform(Xr_tr2)
+    Xp_val = poly.transform(Xr_val)
+
+    lr_p = LinearRegression().fit(Xp_tr, yr_tr2)
+    poly_scores[deg] = r2_score(yr_val, lr_p.predict(Xp_val))
+
+print("Validation R2 by polynomial degree:", poly_scores)
+best_degree = max(poly_scores, key=poly_scores.get)
+print("Selected polynomial degree:", best_degree)
+
+poly_final = PolynomialFeatures(degree=best_degree, include_bias=False)
+Xp_train = poly_final.fit_transform(Xr_poly_base)
+Xp_test = poly_final.transform(Xr_poly_test_base)
+
+poly_name = f"Polynomial Regression (deg={best_degree})"
+
+res, m = evaluate_regressor(
+    poly_name,
+    LinearRegression(),
+    Xp_train, yr_train, Xp_test, yr_test
+)
+results.append(res)
+fitted_models[poly_name] = m
