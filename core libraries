@@ -383,3 +383,11 @@ fitted_models["Lasso Regression"] = m
 
 lasso_coef = pd.Series(m.coef_, index=reg_feature_names)
 print("Number of zero Lasso coefficients:", (lasso_coef == 0).sum())
+
+res, m = evaluate_regressor(
+    "ElasticNet Regression",
+    ElasticNet(alpha=0.1, l1_ratio=0.5, max_iter=10000, random_state=RANDOM_STATE),
+    Xr_train_p, yr_train, Xr_test_p, yr_test
+)
+results.append(res)
+fitted_models["ElasticNet Regression"] = m
