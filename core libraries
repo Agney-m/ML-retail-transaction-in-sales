@@ -468,3 +468,15 @@ res, m = evaluate_regressor(
 )
 results.append(res)
 fitted_models["Random Forest Regressor"] = m
+res, m = evaluate_regressor(
+    "Gradient Boosting Regressor",
+    GradientBoostingRegressor(
+        n_estimators=200,
+        learning_rate=0.05,
+        max_depth=3,
+        random_state=RANDOM_STATE
+    ),
+    Xr_train_p, yr_train, Xr_test_p, yr_test
+)
+results.append(res)
+fitted_models["Gradient Boosting Regressor"] = m
