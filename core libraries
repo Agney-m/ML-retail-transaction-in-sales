@@ -324,3 +324,31 @@ reg_feature_names = reg_preprocessor.get_feature_names_out()
 
 print("Regression train/test shapes:", Xr_train_p.shape, Xr_test_p.shape)
 print("Number of processed regression features:", len(reg_feature_names))
+
+def evaluate_regressor(name, model, X_train, y_train, X_test, y_test):
+    model.fit(X_train, y_train)
+    preds = model.predict(X_test)
+    return {
+        "Model": name,
+        "R2": r2_score(y_test, preds),
+        "RMSE": np.sqrt(mean_squared_error(y_test, preds)),
+        "MAE": mean_absolute_error(y_test, preds),
+    }, model
+
+results = []
+fitted_models = {}
+
+# 1. Linear Regression (baseline)
+res, m = evaluate_regressor(
+    "Linear Regression",
+    LinearRegression(),
+    Xr_train_p, yr_train, Xr_test_p, yr_test
+)
+results.append(res)
+fitted_models["Linear Regression"] = m
+
+linear_coef = pd.Series(m.coef_, index=reg_feature_names).sort_values(
+    key=np.abs, ascending=False
+)
+print("Top Linear Regression coefficients by absolute magnitude:")
+display(linear_coef.head(15))
