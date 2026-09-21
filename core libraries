@@ -37,3 +37,23 @@ plt.rcParams["figure.dpi"] = 100
 pd.set_option("display.max_columns", None)
 
 print("Libraries loaded.")
+
+DATA_PATH = "Sales_transactions_2022_2025.csv"  # Keep the CSV in the same folder as this notebook.
+df_raw = pd.read_csv(DATA_PATH)
+
+print("Shape (rows, columns):", df_raw.shape)
+print("\nData types:")
+print(df_raw.dtypes)
+print("Missing values per column:")
+print(df_raw.isnull().sum().sort_values(ascending=False))
+
+print("\nDuplicate rows:", df_raw.duplicated().sum())
+
+print("\nRegression target (`Profit`) summary:")
+print(df_raw["Profit"].describe())
+
+print("\nClassification target (`Return_Flag`) distribution:")
+print(df_raw["Return_Flag"].value_counts())
+print(df_raw["Return_Flag"].value_counts(normalize=True).round(3))
+# Compact numerical audit
+df_raw.describe(include="all").T
