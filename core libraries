@@ -480,3 +480,10 @@ res, m = evaluate_regressor(
 )
 results.append(res)
 fitted_models["Gradient Boosting Regressor"] = m
+res, m = evaluate_regressor(
+    "KNN Regressor",
+    KNeighborsRegressor(n_neighbors=15),
+    Xr_train_p, yr_train, Xr_test_p, yr_test
+)
+results.append(res)
+fitted_models["KNN Regressor"] = m
